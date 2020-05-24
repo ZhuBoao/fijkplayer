@@ -121,6 +121,7 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
         super() {
     FijkLog.d("create new fijkplayer");
     _value = FijkValue.uninitialized();
+    this.isRecoding = false;
     _doNativeSetup();
   }
 
@@ -600,6 +601,7 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
     if (isPlayable()) {
       FijkLog.i("$this invoke startRecord");
       await _channel.invokeMethod("startRecord");
+      isRecoding = true;
     } else {
       FijkLog.e("$this invoke startRecord invalid state:$state");
       return Future.error(StateError("call startRecord on invalid state $state"));
@@ -611,14 +613,14 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
   /// throw [StateError] if call this method on invalid state.
   /// see [fijkstate zh](https://fijkplayer.befovy.com/docs/zh/fijkstate.html) or
   /// [fijkstate en](https://fijkplayer.befovy.com/docs/en/fijkstate.html) for details
-  Future<void> endRecord() async {
+  Future<void> stopRecord() async {
     await _nativeSetup.future;
     if (!isRecoding) {
-      FijkLog.e("$this invoke endRecord invalid state:$state");
-      return Future.error(StateError("call endRecord when not recording"));
+      FijkLog.e("$this invoke stopRecord invalid state:$state");
+      return Future.error(StateError("call stopRecord when not recording"));
     } else {
-      FijkLog.i("$this invoke endRecord");
-      await _channel.invokeMethod("endRecord");
+      FijkLog.i("$this invoke stopRecord");
+      await _channel.invokeMethod("stopRecord");
     }
   }
 }
