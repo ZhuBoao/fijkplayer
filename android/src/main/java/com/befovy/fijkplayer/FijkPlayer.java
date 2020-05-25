@@ -37,6 +37,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -484,6 +486,24 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
         } else if (call.method.equals("stopRecord")) {
             mIjkMediaPlayer.stopRecord();
             result.success(null);
+        } else if (call.method.equals("takeScreenshot")) {
+            Bitmap bitmap = Bitmap.createBitmap(240, 160, Bitmap.Config.ARGB_8888);
+            mIjkMediaPlayer.getCurrentFrame(bitmap);
+            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/"
+                + new SimpleDateFormat("yyyyMMddHHmmss")
+                .format(new Date()) + ".jpeg";
+                try {
+            File desFile = new File(path);
+            FileOutputStream fos = new FileOutputStream(desFile);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+            result.success(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            result.error("Error when take screenshot", e.getMessage(), null);
+        }
         }
         else {
             result.notImplemented();

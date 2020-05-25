@@ -623,4 +623,22 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
       await _channel.invokeMethod("stopRecord");
     }
   }
+
+  /// takeScreenshot
+  ///
+  /// throw [StateError] if call this method on invalid state.
+  /// see [fijkstate zh](https://fijkplayer.befovy.com/docs/zh/fijkstate.html) or
+  /// [fijkstate en](https://fijkplayer.befovy.com/docs/en/fijkstate.html) for details
+  Future<void> takeScreenshot() async {
+    await _nativeSetup.future;
+    if (!isPlayable()) {
+      FijkLog.e("$this invoke takeScreenshot invalid state:$state");
+      return Future.error(StateError("call takeScreenshot when not recording"));
+    } 
+    else {
+      FijkLog.i("$this invoke takeScreenshot");
+      String path = await _channel.invokeMethod<String>("takeScreenshot");
+      print(path);
+    }
+  }
 }
