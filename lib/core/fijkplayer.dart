@@ -593,7 +593,9 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
   /// [fijkstate en](https://fijkplayer.befovy.com/docs/en/fijkstate.html) for details
   Future<void> startRecord() async {
     await _nativeSetup.future;
-    await start();
+    if (value.state != FijkState.started) {
+      await start();
+    }
     if (isRecoding) {
       FijkLog.e("$this invoke startRecord, but it is recoding");
       return Future.error(StateError("call startRecord while recoding"));
@@ -621,6 +623,7 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
     } else {
       FijkLog.i("$this invoke stopRecord");
       await _channel.invokeMethod("stopRecord");
+      isRecoding = false;
     }
   }
 

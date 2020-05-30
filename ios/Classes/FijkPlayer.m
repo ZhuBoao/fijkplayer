@@ -30,6 +30,7 @@
 #import <IJKPlayer/IJKPlayer.h>
 #import <libkern/OSAtomic.h>
 #import <stdatomic.h>
+#import <Photos/Photos.h>
 
 @interface FijkPlugin ()
 
@@ -579,9 +580,123 @@ static int renderType = 0;
     } else if ([@"snapshot" isEqualToString:call.method]) {
         [self takeSnapshot];
         result(nil);
-    } else {
+    } else if ([@"startRecord" isEqualToString:call.method]) {
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        NSString *appSettingsPath = [documentsDirectory stringByAppendingPathComponent:@"test.mp4"];
+        NSURL *url=[[NSURL alloc]initFileURLWithPath:appSettingsPath];
+
+        [_ijkMediaPlayer startRecordWithFileName:url.absoluteString];
+        result(nil);
+    } else if ([@"stopRecord" isEqualToString:call.method]) {
+        [_ijkMediaPlayer stopRecord];
+
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        NSString *appSettingsPath = [documentsDirectory stringByAppendingPathComponent:@"test.mp4"];
+        NSURL *url=[[NSURL alloc]initFileURLWithPath:appSettingsPath];
+
+        NSLog(@"\nSaving Video at: %@", url.absoluteString);
+
+        // PHPhotoLibrary.shared().performChanges({
+        //     let creationRequest = PHAssetChangeRequest.creationRequestForAssetFromVideoAtFileURL(fileURL: url)
+        //     if let assetCollection = self.assetCollection {
+        //         let addAssetRequest = PHAssetCollectionChangeRequest(for: assetCollection)
+        //         addAssetRequest?.addAssets([creationRequest.placeholderForCreatedAsset!] as NSArray)
+        //     }
+        // }, completionHandler: {success, error in
+        //     if !success { print("Error creating the asset: \(String(describing: error))") }
+        // })
+
+        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+            [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:url];
+        }
+        completionHandler:^(BOOL success, NSError *error) {
+            if (success)
+            {
+                NSLog(@"\nVideo saved");
+            }
+            else{
+                NSLog(@"\n%@", error.description);
+            }
+        }];
+  
+
+        result(nil);
+    } 
+    // else if ([@"takeScreenshot" isEqualToString:call.method]) {
+    //     [self takeSnapshot];
+    //     result(nil);
+    // }
+    else {
         result(FlutterMethodNotImplemented);
     }
 }
+
+// + (void)saveMedia:(UIImage *)image video:(NSURL *)video_url {
+//     if(image) {
+//         if(!image) {
+//             return;
+//         }
+
+//     [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+//         PHAssetChangeRequest *changeRequest = [PHAssetChangeRequest creationRequestForAssetFromImage:image];
+//         NSLog(@"%@", changeRequest.description);
+//     } completionHandler:^(BOOL success, NSError *error) {
+//         if (success) {
+//             NSLog(@"saved down");
+//         } else {
+//             NSLog(@"something wrong");
+//         }
+//     }];
+// } else if (video_url) {
+//     if([video_url absoluteString].length < 1) {
+//         return;
+//     }
+
+//     NSLog(@"source will be : %@", video_url.absoluteString);
+//     NSURL *sourceURL = video_url;
+
+//     if([[NSFileManager defaultManager] fileExistsAtPath:[video_url absoluteString]]) {
+//         [[[ALAssetsLibrary alloc] init] writeVideoAtPathToSavedPhotosAlbum:video_url completionBlock:^(NSURL *assetURL, NSError *error) {
+
+//             if(assetURL) {
+//                 NSLog(@"saved down");
+//             } else {
+//                 NSLog(@"something wrong");
+//             }
+//         }];
+
+//     } else {
+
+//         NSURLSessionTask *download = [[NSURLSession sharedSession] downloadTaskWithURL:sourceURL completionHandler:^(NSURL *location, NSURLResponse *response, NSError *error) {
+//             if(error) {
+//                 NSLog(@"error saving: %@", error.localizedDescription);
+//                 return;
+//             }
+
+//             NSURL *documentsURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] firstObject];
+//             NSURL *tempURL = [documentsURL URLByAppendingPathComponent:[sourceURL lastPathComponent]];
+
+//             [[NSFileManager defaultManager] moveItemAtURL:location toURL:tempURL error:nil];
+
+//             [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+//                 PHAssetChangeRequest *changeRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:tempURL];
+
+//                 NSLog(@"%@", changeRequest.description);
+//             } completionHandler:^(BOOL success, NSError *error) {
+//                 if (success) {
+//                     NSLog(@"saved down");
+//                     [[NSFileManager defaultManager] removeItemAtURL:tempURL error:nil];
+//                 } else {
+//                     NSLog(@"something wrong %@", error.localizedDescription);
+//                     [[NSFileManager defaultManager] removeItemAtURL:tempURL error:nil];
+//                 }
+//             }];
+//         }];
+//         [download resume];
+//     }
+//    }
+// }
 
 @end
