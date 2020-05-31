@@ -600,11 +600,17 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
     }
     if (isPlayable()) {
       FijkLog.i("$this invoke startRecord");
-      await _channel.invokeMethod("startRecord");
-      isRecoding = true;
+      try {
+        await _channel.invokeMethod("startRecord");
+        isRecoding = true;
+      } on PlatformException catch (e) {
+        debugPrint(e.message);
+        debugPrint(e.details);
+      }
     } else {
       FijkLog.e("$this invoke startRecord invalid state:$state");
-      return Future.error(StateError("call startRecord on invalid state $state"));
+      return Future.error(
+          StateError("call startRecord on invalid state $state"));
     }
   }
 
@@ -620,7 +626,13 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
       return Future.error(StateError("call stopRecord when not recording"));
     } else {
       FijkLog.i("$this invoke stopRecord");
-      await _channel.invokeMethod("stopRecord");
+      try {
+        await _channel.invokeMethod("stopRecord");
+        isRecoding = false;
+      } on PlatformException catch (e) {
+        debugPrint(e.message);
+        debugPrint(e.details);
+      }
     }
   }
 
@@ -634,11 +646,15 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
     if (!isPlayable()) {
       FijkLog.e("$this invoke takeScreenshot invalid state:$state");
       return Future.error(StateError("call takeScreenshot when not recording"));
-    } 
-    else {
+    } else {
       FijkLog.i("$this invoke takeScreenshot");
-      String path = await _channel.invokeMethod<String>("takeScreenshot");
-      print(path);
+      try {
+        String path = await _channel.invokeMethod<String>("takeScreenshot");
+        print(path);
+      } on PlatformException catch (e) {
+        debugPrint(e.message);
+        debugPrint(e.details);
+      }
     }
   }
 }

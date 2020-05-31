@@ -54,6 +54,12 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkEventListener;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
+import android.provider.MediaStore;
+import android.content.Context;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.provider.MediaStore.MediaColumns;
+import android.provider.DocumentsContract;
 
 public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventListener, IMediaPlayer.OnSnapShotListener {
 
@@ -478,32 +484,39 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
             }
             result.success(null);
         } else if (call.method.equals("startRecord")) {
-            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/"
-                    + new SimpleDateFormat("yyyyMMddHHmmss")
+            try {
+                String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/"
+                    + "Instacure_" + new SimpleDateFormat("yyyyMMddHHmmss")
                     .format(new Date()) + ".mp4";
-            mIjkMediaPlayer.startRecord(path);
-            result.success(null);
+                int ret = mIjkMediaPlayer.startRecord(path);
+                if (ret == -1) {
+                    result.error("-1", "Error when startRecord", "");
+                }
+                else {
+                    result.success(null);
+                }
+            }
+            catch (Exception e) {
+                result.error("-1", "Error when startRecord", e.getMessage());
+            }
         } else if (call.method.equals("stopRecord")) {
-            mIjkMediaPlayer.stopRecord();
-            result.success(null);
+            try {
+                int ret = mIjkMediaPlayer.stopRecord();
+                if (ret == -1) {
+                    result.error("-1", "Error when stopRecord", "");
+                }
+                else {
+                    result.success(null);
+                }
+            }
+            catch (Exception e) {
+                result.error("-1", "Error when stopRecord", e.getMessage());
+            }
         } else if (call.method.equals("takeScreenshot")) {
             Bitmap bitmap = Bitmap.createBitmap(240, 160, Bitmap.Config.ARGB_8888);
             mIjkMediaPlayer.getCurrentFrame(bitmap);
-            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/"
-                + new SimpleDateFormat("yyyyMMddHHmmss")
-                .format(new Date()) + ".jpeg";
-                try {
-            File desFile = new File(path);
-            FileOutputStream fos = new FileOutputStream(desFile);
-            BufferedOutputStream bos = new BufferedOutputStream(fos);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-            bos.flush();
-            bos.close();
-            result.success(path);
-        } catch (IOException e) {
-            e.printStackTrace();
-            result.error("Error when take screenshot", e.getMessage(), null);
-        }
+            String title = "Instacure_" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".jpeg";                
+            MediaStore.Images.Media.insertImage(mEngine.context().getContentResolver(), bitmap, title , "Description");
         }
         else {
             result.notImplemented();
