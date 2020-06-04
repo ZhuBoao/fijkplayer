@@ -60,6 +60,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.provider.MediaStore.MediaColumns;
 import android.provider.DocumentsContract;
+import android.content.Intent;
 
 public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventListener, IMediaPlayer.OnSnapShotListener {
 
@@ -98,6 +99,7 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
     private TextureRegistry.SurfaceTextureEntry mSurfaceTextureEntry;
     private SurfaceTexture mSurfaceTexture;
     private Surface mSurface;
+    private String recordVideoPath;
     final private boolean mJustSurface;
 
     FijkPlayer(@NonNull FijkEngine engine, boolean justSurface) {
@@ -485,10 +487,10 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
             result.success(null);
         } else if (call.method.equals("startRecord")) {
             try {
-                String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/"
+                this.recordVideoPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/InstaCure/"
                     + "Instacure_" + new SimpleDateFormat("yyyyMMddHHmmss")
                     .format(new Date()) + ".mp4";
-                int ret = mIjkMediaPlayer.startRecord(path);
+                int ret = mIjkMediaPlayer.startRecord(this.recordVideoPath);
                 if (ret == -1) {
                     result.error("-1", "Error when startRecord", "");
                 }
@@ -506,6 +508,7 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
                     result.error("-1", "Error when stopRecord", "");
                 }
                 else {
+                    galleryAddPic(this.recordVideoPath);
                     result.success(null);
                 }
             }
@@ -515,8 +518,22 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
         } else if (call.method.equals("takeScreenshot")) {
             Bitmap bitmap = Bitmap.createBitmap(240, 160, Bitmap.Config.ARGB_8888);
             mIjkMediaPlayer.getCurrentFrame(bitmap);
-            String title = "Instacure_" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".jpeg";                
-            MediaStore.Images.Media.insertImage(mEngine.context().getContentResolver(), bitmap, title , "Description");
+            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/InstaCure/"
+                + new SimpleDateFormat("yyyyMMddHHmmss")
+                .format(new Date()) + ".jpeg";
+            try {
+                File desFile = new File(path);
+                FileOutputStream fos = new FileOutputStream(desFile);
+                BufferedOutputStream bos = new BufferedOutputStream(fos);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                bos.flush();
+                bos.close();
+                galleryAddPic(path);
+                result.success(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                result.error("Error when take screenshot", e.getMessage(), null);
+            }
         }
         else {
             result.notImplemented();
@@ -550,5 +567,13 @@ public class FijkPlayer implements MethodChannel.MethodCallHandler, IjkEventList
             Log.e("FIJKPLAYER", "Directory not created");
         }
         return file;
+    }
+
+    private void galleryAddPic(String path) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(path);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        mEngine.context().sendBroadcast(mediaScanIntent);
     }
 }

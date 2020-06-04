@@ -38,7 +38,7 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
 
   FijkValue _value;
 
-  bool isRecoding;
+  bool isRecording;
 
   static Iterable<FijkPlayer> get all => _allInstance.values;
 
@@ -52,6 +52,8 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
 
   /// return the current state
   FijkState get state => _value.state;
+
+  bool get recording => isRecording;
 
   @override
   FijkValue get value => _value;
@@ -121,7 +123,7 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
         super() {
     FijkLog.d("create new fijkplayer");
     _value = FijkValue.uninitialized();
-    this.isRecoding = false;
+    isRecording = false;
     _doNativeSetup();
   }
 
@@ -596,7 +598,7 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
     if (value.state != FijkState.started) {
       await start();
     }
-    if (isRecoding) {
+    if (isRecording) {
       FijkLog.e("$this invoke startRecord, but it is recoding");
       return Future.error(StateError("call startRecord while recoding"));
     }
@@ -604,7 +606,8 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
       FijkLog.i("$this invoke startRecord");
       try {
         await _channel.invokeMethod("startRecord");
-        isRecoding = true;
+        isRecording = true;
+        notifyListeners();
       } on PlatformException catch (e) {
         debugPrint(e.message);
         debugPrint(e.details);
@@ -623,14 +626,15 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
   /// [fijkstate en](https://fijkplayer.befovy.com/docs/en/fijkstate.html) for details
   Future<void> stopRecord() async {
     await _nativeSetup.future;
-    if (!isRecoding) {
+    if (!isRecording) {
       FijkLog.e("$this invoke stopRecord invalid state:$state");
       return Future.error(StateError("call stopRecord when not recording"));
     } else {
       FijkLog.i("$this invoke stopRecord");
       try {
         await _channel.invokeMethod("stopRecord");
-        isRecoding = false;
+        isRecording = false;
+        notifyListeners();
       } on PlatformException catch (e) {
         debugPrint(e.message);
         debugPrint(e.details);
