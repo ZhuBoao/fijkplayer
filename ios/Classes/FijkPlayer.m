@@ -624,79 +624,13 @@ static int renderType = 0;
 
         result(nil);
     } 
-    // else if ([@"takeScreenshot" isEqualToString:call.method]) {
-    //     [self takeSnapshot];
-    //     result(nil);
-    // }
+    else if ([@"takeScreenshot" isEqualToString:call.method]) {
+        [self takeSnapshot];
+        result(nil);
+    }
     else {
         result(FlutterMethodNotImplemented);
     }
 }
-
-// + (void)saveMedia:(UIImage *)image video:(NSURL *)video_url {
-//     if(image) {
-//         if(!image) {
-//             return;
-//         }
-
-//     [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-//         PHAssetChangeRequest *changeRequest = [PHAssetChangeRequest creationRequestForAssetFromImage:image];
-//         NSLog(@"%@", changeRequest.description);
-//     } completionHandler:^(BOOL success, NSError *error) {
-//         if (success) {
-//             NSLog(@"saved down");
-//         } else {
-//             NSLog(@"something wrong");
-//         }
-//     }];
-// } else if (video_url) {
-//     if([video_url absoluteString].length < 1) {
-//         return;
-//     }
-
-//     NSLog(@"source will be : %@", video_url.absoluteString);
-//     NSURL *sourceURL = video_url;
-
-//     if([[NSFileManager defaultManager] fileExistsAtPath:[video_url absoluteString]]) {
-//         [[[ALAssetsLibrary alloc] init] writeVideoAtPathToSavedPhotosAlbum:video_url completionBlock:^(NSURL *assetURL, NSError *error) {
-
-//             if(assetURL) {
-//                 NSLog(@"saved down");
-//             } else {
-//                 NSLog(@"something wrong");
-//             }
-//         }];
-
-//     } else {
-
-//         NSURLSessionTask *download = [[NSURLSession sharedSession] downloadTaskWithURL:sourceURL completionHandler:^(NSURL *location, NSURLResponse *response, NSError *error) {
-//             if(error) {
-//                 NSLog(@"error saving: %@", error.localizedDescription);
-//                 return;
-//             }
-
-//             NSURL *documentsURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] firstObject];
-//             NSURL *tempURL = [documentsURL URLByAppendingPathComponent:[sourceURL lastPathComponent]];
-
-//             [[NSFileManager defaultManager] moveItemAtURL:location toURL:tempURL error:nil];
-
-//             [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-//                 PHAssetChangeRequest *changeRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:tempURL];
-
-//                 NSLog(@"%@", changeRequest.description);
-//             } completionHandler:^(BOOL success, NSError *error) {
-//                 if (success) {
-//                     NSLog(@"saved down");
-//                     [[NSFileManager defaultManager] removeItemAtURL:tempURL error:nil];
-//                 } else {
-//                     NSLog(@"something wrong %@", error.localizedDescription);
-//                     [[NSFileManager defaultManager] removeItemAtURL:tempURL error:nil];
-//                 }
-//             }];
-//         }];
-//         [download resume];
-//     }
-//    }
-// }
 
 @end
